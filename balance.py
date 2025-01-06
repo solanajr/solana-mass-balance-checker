@@ -3,7 +3,7 @@ from solders.pubkey import Pubkey
 import os
 import requests
 
-# Fungsi untuk mendapatkan harga SOL dalam USD
+# Function to get the price of SOL in USD
 def get_sol_price():
     try:
         response = requests.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd")
@@ -17,70 +17,70 @@ def get_sol_price():
         print("Error fetching SOL price:", e)
         return None
 
-# Membaca URL endpoint dari file endpoint.txt
+# Read the endpoint URL from the file endpoint.txt
 def get_endpoint():
     try:
         with open("endpoint.txt", "r") as endpoint_file:
             endpoint_url = endpoint_file.readline().strip()
             return endpoint_url
     except FileNotFoundError:
-        print("File endpoint.txt tidak ditemukan.")
+        print("The file endpoint.txt was not found.")
         return None
     except Exception as e:
-        print("Terjadi kesalahan saat membaca endpoint:", e)
+        print("An error occurred while reading the endpoint:", e)
         return None
 
-# Mendapatkan URL endpoint dari file endpoint.txt
+# Get the endpoint URL from the file endpoint.txt
 endpoint_url = get_endpoint()
 
 if endpoint_url:
-    # Inisialisasi klien Solana dengan URL dari endpoint.txt
+    # Initialize the Solana client with the URL from endpoint.txt
     solana_client = Client(endpoint_url)
 
-    # Meminta pengguna untuk menentukan file txt
-    file_path = input("Masukkan path file txt (format: wallet|privatekey): ")
+    # Prompt the user to specify the txt file
+    file_path = input("Enter the path to the txt file (format: wallet|privatekey): ")
 
-    # Path untuk menyimpan log
+    # Path to save the log
     log_file_path = os.path.join("data", "log_balance.txt")
 
-    # Dapatkan harga SOL saat ini dalam USD
+    # Get the current price of SOL in USD
     sol_price_in_usd = get_sol_price()
 
     if sol_price_in_usd:
         try:
-            # Membaca wallet dari file
+            # Read wallets from the file
             with open(file_path, 'r') as file:
                 lines = file.readlines()
 
-            # Membuka file log untuk menulis hasil
+            # Open the log file to write the results
             with open(log_file_path, 'a') as log_file:
                 for line in lines:
-                    # Mengambil wallet dari format wallet|privatekey
+                    # Extract the wallet from the format wallet|privatekey
                     wallet = line.split('|')[0].strip()
 
-                    # Mengubah string wallet menjadi Pubkey
+                    # Convert the wallet string to Pubkey
                     pubkey = Pubkey.from_string(wallet)
 
-                    # Mendapatkan saldo
+                    # Get the balance
                     balance_result = solana_client.get_balance(pubkey)
 
-                    # Memeriksa apakah hasilnya valid
+                    # Check if the result is valid
                     if balance_result.value is not None:
                         balance_in_sol = balance_result.value / 1_000_000_000
                         balance_in_usd = balance_in_sol * sol_price_in_usd
-                        log_message = f"Wallet: {wallet}, Jumlah Token: {balance_in_sol} SOL, Harga dalam USD: {balance_in_usd:.2f} USD\n"
-                        print(log_message.strip())  # Cetak ke konsol
-                        log_file.write(log_message)  # Simpan ke file log
+                        log_message = f"Wallet: {wallet}, Token Amount: {balance_in_sol} SOL, Price in USD: {balance_in_usd:.2f} USD\n"
+                        print(log_message.strip())  # Print to the console
+                        log_file.write(log_message)  # Save to the log file
                     else:
                         error_message = f"Error retrieving balance for {wallet}: {balance_result}\n"
-                        print(error_message.strip())  # Cetak ke konsol
-                        log_file.write(error_message)  # Simpan ke file log
+                        print(error_message.strip())  # Print to the console
+                        log_file.write(error_message)  # Save to the log file
 
         except FileNotFoundError:
-            print("File tidak ditemukan. Pastikan path file yang dimasukkan benar.")
+            print("File not found. Make sure the file path entered is correct.")
         except Exception as e:
-            print("Terjadi kesalahan:", e)
+            print("An error occurred:", e)
     else:
-        print("Tidak dapat mendapatkan harga SOL dalam USD. Program berhenti.")
+        print("Unable to retrieve the price of SOL in USD. Program stopped.")
 else:
-    print("Tidak dapat membaca endpoint URL dari file. Program berhenti.")
+    print("Unable to read the endpoint URL from the file. Program stopped.")
